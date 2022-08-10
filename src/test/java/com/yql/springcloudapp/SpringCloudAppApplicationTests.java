@@ -1,5 +1,6 @@
 package com.yql.springcloudapp;
 
+import com.yql.springcloudapp.config.RibbonClientRule;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -7,12 +8,15 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cloud.client.ServiceInstance;
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 import org.springframework.cloud.client.loadbalancer.LoadBalancerClient;
+import org.springframework.cloud.netflix.ribbon.RibbonClient;
 import org.springframework.context.ApplicationContext;
 import org.springframework.web.client.RestTemplate;
 
 import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
 
+
+@RibbonClient(value = "myRibbonClientRule", configuration = RibbonClientRule.class)
 @SpringBootTest
 @EnableDiscoveryClient
 class SpringCloudAppApplicationTests {
@@ -42,9 +46,11 @@ class SpringCloudAppApplicationTests {
     @Test
     public void testNacosDiscovery() {
         //使用 LoadBalanceClient 和 RestTemplate 结合的方式来访问
-        ServiceInstance serviceInstance = loadBalancerClient.choose("spring-cloud-app");
-        String url = String.format("http://%s:%s/echo/%s", serviceInstance.getHost(), serviceInstance.getPort(), appName);
-        System.out.println("request url:" + url);
-        System.out.println(restTemplate.getForObject(url, String.class));
+        for (int i = 0; i < 2; i++) {
+            ServiceInstance serviceInstance = loadBalancerClient.choose("spring-cloud-app");
+            String url = String.format("http://%s:%s/echo/%s", serviceInstance.getHost(), serviceInstance.getPort(), appName);
+            System.out.println("request url:" + url);
+            System.out.println(restTemplate.getForObject(url, String.class));
+        }
     }
 }
