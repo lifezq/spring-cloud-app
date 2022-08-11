@@ -1,6 +1,9 @@
 package com.yql.springcloudapp;
 
+import com.yql.springcloudapp.client.EchoService;
 import com.yql.springcloudapp.config.RibbonClientRule;
+import com.yql.springcloudapp.service.MyMessageChannel;
+import org.apache.rocketmq.common.message.MessageConst;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -9,13 +12,21 @@ import org.springframework.cloud.client.ServiceInstance;
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 import org.springframework.cloud.client.loadbalancer.LoadBalancerClient;
 import org.springframework.cloud.netflix.ribbon.RibbonClient;
+import org.springframework.cloud.openfeign.EnableFeignClients;
+import org.springframework.cloud.stream.annotation.EnableBinding;
 import org.springframework.context.ApplicationContext;
+import org.springframework.messaging.Message;
+import org.springframework.messaging.MessageHeaders;
+import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.web.client.RestTemplate;
 
 import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
+import java.util.Map;
 
-
+@EnableFeignClients
+@EnableBinding(MyMessageChannel.class)
 @RibbonClient(value = "myRibbonClientRule", configuration = RibbonClientRule.class)
 @SpringBootTest
 @EnableDiscoveryClient
@@ -27,6 +38,12 @@ class SpringCloudAppApplicationTests {
     private LoadBalancerClient loadBalancerClient;
     @Autowired
     private RestTemplate restTemplate;
+
+    @Autowired
+    private MyMessageChannel output;
+
+    @Autowired
+    private EchoService echoService;
 
     @Value("${spring.application.name}")
     private String appName;
@@ -52,5 +69,18 @@ class SpringCloudAppApplicationTests {
             System.out.println("request url:" + url);
             System.out.println(restTemplate.getForObject(url, String.class));
         }
+    }
+
+    @Test
+    public void testRocketMQ() {
+        Map<String, Object> headers = new HashMap<>();
+        headers.put(MessageConst.PROPERTY_TAGS, "tagStr");
+        Message message = MessageBuilder.createMessage("my mq msg.data", new MessageHeaders(headers));
+        output.out().send(message);
+    }
+
+    @Test
+    public void testFeign() {
+        System.out.println(echoService.echo("ZhangSan"));
     }
 }

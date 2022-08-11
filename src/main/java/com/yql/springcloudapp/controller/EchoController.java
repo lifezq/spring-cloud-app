@@ -1,5 +1,7 @@
 package com.yql.springcloudapp.controller;
 
+import com.alibaba.csp.sentinel.annotation.SentinelResource;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -15,8 +17,12 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping(value = "/echo")
 @RestController
 public class EchoController {
+    @Value("${server.port}")
+    private int port;
+
+    @SentinelResource("echo")
     @GetMapping(value = "/{string}")
     public String echo(@PathVariable String string) {
-        return "Hello Nacos Discovery " + string;
+        return port + ":Hello Nacos Discovery " + string;
     }
 }
