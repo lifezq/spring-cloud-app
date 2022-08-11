@@ -12,8 +12,6 @@ import org.springframework.cloud.client.ServiceInstance;
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 import org.springframework.cloud.client.loadbalancer.LoadBalancerClient;
 import org.springframework.cloud.netflix.ribbon.RibbonClient;
-import org.springframework.cloud.openfeign.EnableFeignClients;
-import org.springframework.cloud.stream.annotation.EnableBinding;
 import org.springframework.context.ApplicationContext;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageHeaders;
@@ -25,8 +23,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 
-@EnableFeignClients
-@EnableBinding(MyMessageChannel.class)
+
 @RibbonClient(value = "myRibbonClientRule", configuration = RibbonClientRule.class)
 @SpringBootTest
 @EnableDiscoveryClient
@@ -81,6 +78,8 @@ class SpringCloudAppApplicationTests {
 
     @Test
     public void testFeign() {
-        System.out.println(echoService.echo("ZhangSan"));
+        for (int i = 0; i < 2; i++) {
+            System.out.println(echoService.echo("ZhangSan"));
+        }
     }
 }
