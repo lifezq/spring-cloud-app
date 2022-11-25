@@ -9,7 +9,6 @@ package com.yql.springcloudapp;
  */
 
 import com.yql.springcloudapp.client.EchoService;
-import com.yql.springcloudapp.config.RibbonClientRule;
 import com.yql.springcloudapp.service.MyMessageChannel;
 import org.apache.rocketmq.common.message.MessageConst;
 import org.junit.jupiter.api.Test;
@@ -19,7 +18,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cloud.client.ServiceInstance;
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 import org.springframework.cloud.client.loadbalancer.LoadBalancerClient;
-import org.springframework.cloud.netflix.ribbon.RibbonClient;
 import org.springframework.context.ApplicationContext;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageHeaders;
@@ -32,7 +30,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 
-@RibbonClient(value = "myRibbonClientRule", configuration = RibbonClientRule.class)
+//@RibbonClient(value = "myRibbonClientRule", configuration = RibbonClientRule.class)
 @SpringBootTest
 @EnableDiscoveryClient
 class SpringCloudAppApplicationTests {
@@ -68,9 +66,20 @@ class SpringCloudAppApplicationTests {
     @Test
     public void testNacosDiscovery() {
         //使用 LoadBalanceClient 和 RestTemplate 结合的方式来访问
+        //这里是用LoadBalanceClient来负载，所以restTemplate Bean上需要取消@LoadBalanced 才能成功
         for (int i = 0; i < 2; i++) {
             ServiceInstance serviceInstance = loadBalancerClient.choose("spring-cloud-app");
             String url = String.format("http://%s:%s/echo/%s", serviceInstance.getHost(), serviceInstance.getPort(), appName);
+            System.out.println("request url:" + url);
+            System.out.println(restTemplate.getForObject(url, String.class));
+        }
+    }
+
+    @Test
+    public void testRestTemplateLoadBalance() {
+        //这里需要restTemplate Bean加注解@LoadBalanced
+        for (int i = 0; i < 2; i++) {
+            String url = String.format("http://%s/echo/%s", appName, appName);
             System.out.println("request url:" + url);
             System.out.println(restTemplate.getForObject(url, String.class));
         }
